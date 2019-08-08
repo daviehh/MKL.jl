@@ -17,6 +17,8 @@ lines = map(lines) do l
         return "const libblas_name = $(repr(libmkl_rt))\n"
     elseif occursin(r"liblapack_name", l)
         return "const liblapack_name = $(repr(libmkl_rt))\n"
+    elseif occursin(r"USE_BLAS64", l)
+        return "const USE_BLAS64 = false"
     else
         return l
     end
