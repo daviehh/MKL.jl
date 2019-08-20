@@ -4,7 +4,7 @@ os:
   - linux
 
 julia:
-  - 1.1
+  - 1.2
 
 before_script:
   # Every 30 seconds, look for the build log file. If it exists, then
