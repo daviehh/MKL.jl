@@ -24,7 +24,7 @@ function lineedit(editor::Function, filename::String)
     lines = open(filename) do io
         readlines(io, keep=true)
     end
-    
+
     # Run user editor; if something goes wrong, just quit out
     try
         lines = editor(lines)
@@ -32,7 +32,7 @@ function lineedit(editor::Function, filename::String)
         @error("Error occured while running user line editor:", e)
         return nothing
     end
-    
+
     # Write it out, if the editor decides something needs to change
     if lines != nothing
         open(filename, "w") do io
@@ -116,6 +116,19 @@ function force_proper_PATH(base_dir, dir_path)
     end
 end
 
+
+function generate_precompile_image!()
+    prec_jl_url = "https://raw.githubusercontent.com/JuliaLang/julia/release-1.3/contrib/generate_precompile.jl"
+    prec_jl_fn = "generate_precompile.jl"
+    download(prec_jl_url, prec_jl_fn)
+    prec_jl_content = read(prec_jl_fn, String)
+    open(prec_jl_fn, "w") do f
+        write(f, replace(prec_jl_content, "@assert n_succeeded > 3500" => raw"println(\"processed: $n_succeeded\") # @assert n_succeeded > 3500"))
+    end
+    PackageCompiler.build_sysimg(PackageCompiler.default_sysimg_path(), prec_jl_fn, verbose=true, cpu_target="native")
+end
+
+
 function enable_mkl_startup(libmkl_rt)
     # First, we need to modify a few files in Julia's base directory
     base_dir = joinpath(Sys.BINDIR, Base.DATAROOTDIR, "julia", "base")
@@ -135,7 +148,7 @@ function enable_mkl_startup(libmkl_rt)
     if ispath(sysimgpath)
         rm(sysimgpath, recursive=true)
     end
-    force_native_image!()
+    generate_precompile_image!()
 end
 
 function enable_openblas_startup(libopenblas = "libopenblas")
@@ -153,5 +166,5 @@ function enable_openblas_startup(libopenblas = "libopenblas")
     if ispath(sysimgpath)
         rm(sysimgpath, recursive=true)
     end
-    force_native_image!()
+    generate_precompile_image!()
 end
